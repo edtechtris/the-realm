@@ -1,6 +1,6 @@
 # The Realm
 
-An immersive portfolio experience by Tristia Hennessey, live at **xr.edtechtris.com**.
+An immersive portfolio experience by Tristia Hennessey, live at **edtechtris.com**.
 
 Visitors walk a warm off-white void with three doors:
 
