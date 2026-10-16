@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="ds/styles.css">
+<script src="ds/bundle.js"></script>
+<title>The Realm · Tristia Hennessey</title>
+<script type="module" src="realm.js?v=30"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Patrick+Hand&amp;family=Klee+One&amp;display=swap">
+<style>html,body{margin:0;height:100%;overflow:hidden;background:#E8E8EA}a{color:#1f6f74}a:hover{color:#14514f}</style>
+</helmet>
+<div data-hall-root="1" tabIndex="0" style="position:fixed;inset:0;outline:none;background:#E8E8EA;cursor:none;font-family:var(--font-body);user-select:none;-webkit-user-select:none;overflow:hidden">
+  <canvas data-hall="1" ref="{{ canvasRef }}" style="position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none"></canvas>
+
+  <div style="position:absolute;left:24px;top:20px;display:flex;flex-direction:column;gap:4px;pointer-events:none">
+    <span style="font-size:12px;letter-spacing:0.14em;text-transform:uppercase;color:{{ hudA }}">The Realm</span>
+    <span style="font-size:13px;color:{{ hudB }};white-space:nowrap">{{ areaName }}</span>
+  </div>
+
+  <a href="https://edtechtris.com" target="_top" style="position:absolute;right:20px;top:16px;display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:8px;border:1px solid #2f8a90;background:rgba(238,242,241,0.7);color:#1f5f63;font:500 13px var(--font-body);cursor:none;white-space:nowrap;text-decoration:none" style-hover="background:#d3ebe8">Back to edtechtris.com</a>
+
+  <sc-if value="{{ needFocus }}" hint-placeholder-val="{{ false }}">
+    <div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);padding:12px 20px;border-radius:8px;border:1px solid #2f8a90;background:rgba(238,242,241,0.88);color:#1f5f63;font:500 16px var(--font-body);pointer-events:none;white-space:nowrap">Click anywhere, then use the arrow keys</div>
+  </sc-if>
+
+  <sc-if value="{{ showHint }}" hint-placeholder-val="{{ true }}">
+    <div style="position:absolute;left:50%;bottom:40px;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:6px;pointer-events:none;text-align:center">
+      <span style="font-size:20px;font-weight:500;letter-spacing:0.02em;color:#292b31;white-space:nowrap">{{ hintMain }}</span>
+      <span style="font-size:13px;color:#595d6c;white-space:nowrap">{{ hintSub }}</span>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ showLoop }}" hint-placeholder-val="{{ false }}">
+    <div style="position:absolute;left:50%;bottom:40px;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:6px;pointer-events:none;text-align:center">
+      <span style="font-size:18px;font-weight:500;color:#292b31;white-space:nowrap">Back at the Entry</span>
+      <span style="font-size:13px;color:#595d6c">Pick another path, or walk Origin Story again.</span>
+    </div>
+  </sc-if>
+
+  <canvas ref="{{ glitchRef }}" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:8;display:block"></canvas>
+  <sc-if value="{{ conjure }}" hint-placeholder-val="{{ false }}">
+    <div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:9;display:flex;flex-direction:column;align-items:center;gap:14px;padding:24px 28px;border-radius:8px;border:1px solid #9184d9;background:rgba(22,24,38,0.92);color:#e9e9ed;text-align:center;max-width:min(360px,86vw)">
+      <img src="assets/conjure-icon.png" alt="" style="width:56px;height:56px;display:block"></img>
+      <span style="font-size:18px;font-weight:500">ConJure XR opened in a new tab</span>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center">
+        <a href="https://conjurexr.com" target="_blank" rel="noopener" style="padding:8px 14px;border-radius:8px;border:1px solid #9184d9;color:#b9b1ec;text-decoration:none;font-size:13px;cursor:none" style-hover="background:rgba(145,132,217,0.18)">Didn't open? Go to conjurexr.com</a>
+        <button onClick="{{ closeConjure }}" style="padding:8px 14px;border-radius:8px;border:1px solid #5d5294;background:transparent;color:#e9e9ed;font:500 13px var(--font-body);cursor:none" style-hover="background:rgba(145,132,217,0.18)">Back to the hallway</button>
+      </div>
+    </div>
+  </sc-if>
+  <div style="position:absolute;inset:0;background:{{ flashBg }};pointer-events:none;z-index:7;opacity:{{ flashO }};transition:{{ flashTr }}"></div>
+  <sc-if value="{{ doorMsg }}" hint-placeholder-val="{{ false }}">
+    <div style="position:absolute;left:50%;bottom:40px;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:6px;pointer-events:none;text-align:center">
+      <span style="font-size:18px;font-weight:500;color:#292b31;white-space:nowrap">{{ doorTitle }}</span>
+      <span style="font-size:13px;color:#595d6c">This room is still being built.</span>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ hoverMsg }}" hint-placeholder-val="{{ false }}">
+    <div style="position:absolute;left:50%;bottom:40px;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:6px;pointer-events:none;text-align:center">
+      <span style="font-size:18px;font-weight:500;color:{{ hudA }};white-space:nowrap">{{ hoverTitle }}</span>
+      <span style="font-size:13px;color:{{ hudC }};white-space:nowrap">{{ grabHint }}</span>
+    </div>
+  </sc-if>
+  <sc-if value="{{ fireHintOn }}" hint-placeholder-val="{{ false }}">
+    <div style="position:absolute;left:50%;bottom:40px;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:6px;pointer-events:none;text-align:center">
+      <span style="font-size:18px;font-weight:500;color:#f4ecd8;white-space:nowrap">{{ fireHintMain }}</span>
+      <span style="font-size:13px;color:#e9c98a;white-space:nowrap">Each log tells a story</span>
+    </div>
+  </sc-if>
+  <sc-if value="{{ storyOn }}" hint-placeholder-val="{{ false }}">
+    <div style="position:absolute;left:50%;bottom:24px;transform:translateX(-50%);width:min(1000px,94vw);max-height:76vh;overflow-y:auto;overflow-x:hidden;box-sizing:border-box;padding:18px 24px;border-radius:8px;border:1px solid {{ storyCol }};background:rgba(14,16,36,0.84);color:#f4ecd8;display:flex;flex-direction:column;gap:10px;z-index:6">
+      <div style="display:flex;justify-content:space-between;gap:16px;align-items:flex-start">
+        <span style="font-size:24px;font-weight:500;text-wrap:pretty;color:{{ storyCol }}">{{ storyTitle }}</span>
+        <button onClick="{{ closeStory }}" aria-label="Close story" style="width:36px;height:36px;display:flex;align-items:center;justify-content:center;border-radius:8px;border:1px solid rgba(244,236,216,0.35);background:transparent;color:#f4ecd8;font:500 18px/1 Inter,sans-serif;cursor:pointer" style-hover="background:rgba(244,236,216,0.12)">×</button>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:20px">
+        <sc-for list="{{ storyCh }}" as="c" hint-placeholder-count="3">
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <span style="font-size:13px;letter-spacing:0.14em;text-transform:uppercase;color:{{ storyCol }}">{{ c.k }}</span>
+            <p style="margin:0;font-size:16px;line-height:1.5;color:#ece8f4;text-wrap:pretty">{{ c.t }}</p>
+          </div>
+        </sc-for>
+      </div>
+      <span style="font-size:14px;color:#e9c98a">{{ storyNext }}</span>
+    </div>
+  </sc-if>
+  <sc-if value="{{ panel }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ closePanel }}" style="position:absolute;inset:0;z-index:11;background:rgba(24,58,60,0.14)"></div>
+    <div style="position:absolute;left:50%;top:50%;z-index:12;width:min(920px,92vw);max-height:86vh;overflow:auto;box-sizing:border-box;padding:26px 30px 28px;border:1px solid #3a9ea4;border-radius:8px;background:rgba(242,248,247,0.95);box-shadow:0 0 0 6px rgba(58,158,164,0.08),0 24px 60px rgba(20,50,52,0.22);color:#1d2a2b;opacity:{{ pO }};transform:{{ pT }};clip-path:{{ pClip }};transition:opacity 0.35s ease, transform 0.5s cubic-bezier(0.2,0.8,0.2,1), clip-path 0.55s cubic-bezier(0.2,0.8,0.2,1)">
+      <div style="position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg, rgba(47,138,144,0.07) 0px, rgba(47,138,144,0.07) 1px, transparent 1px, transparent 4px)"></div>
+      <div style="position:absolute;left:8px;top:8px;width:16px;height:16px;border-left:2px solid #2f8a90;border-top:2px solid #2f8a90;pointer-events:none"></div>
+      <div style="position:absolute;right:8px;top:8px;width:16px;height:16px;border-right:2px solid #2f8a90;border-top:2px solid #2f8a90;pointer-events:none"></div>
+      <div style="position:absolute;left:8px;bottom:8px;width:16px;height:16px;border-left:2px solid #2f8a90;border-bottom:2px solid #2f8a90;pointer-events:none"></div>
+      <div style="position:absolute;right:8px;bottom:8px;width:16px;height:16px;border-right:2px solid #2f8a90;border-bottom:2px solid #2f8a90;pointer-events:none"></div>
+      <div style="position:relative;display:flex;flex-direction:column;gap:20px">
+        <div style="display:flex;justify-content:flex-end;align-items:center;gap:16px;flex-wrap:wrap">
+          <button onClick="{{ closePanel }}" style="padding:7px 12px;border-radius:8px;border:1px solid #2f8a90;background:transparent;color:#1f5f63;font:500 13px var(--font-body);cursor:none;white-space:nowrap" style-hover="background:#d3ebe8">Put it back · Esc</button>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <h2 style="margin:0;font-size:28px;line-height:1.15;font-weight:500;text-wrap:pretty">{{ pTitle }}</h2>
+          <span style="font-size:15px;color:#3d5254">{{ pSub }}</span>
+        </div>
+        <sc-if value="{{ isProject }}" hint-placeholder-val="{{ true }}">
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:24px">
+            <div style="display:flex;flex-direction:column;gap:14px">
+              <span style="font-size:12px;letter-spacing:0.14em;text-transform:uppercase;color:#1f6f74">Awards</span>
+              <div style="display:flex;flex-direction:column;gap:12px">
+                <sc-for list="{{ pAwards }}" as="a" hint-placeholder-count="2">
+                  <div style="display:flex;gap:14px;align-items:center">
+                    <div role="img" aria-label="{{ a.name }}" style="width:64px;height:64px;flex:none;background-image:{{ a.bg }};background-size:contain;background-repeat:no-repeat;background-position:center"></div>
+                    <div style="display:flex;flex-direction:column;gap:2px;min-width:0;line-height:1.35">
+                      <span style="display:block;font-size:15px;font-weight:500;line-height:1.35">{{ a.name }} · {{ a.year }}</span>
+                      <span style="display:block;font-size:13px;color:#3d5254;line-height:1.35">{{ a.org }}</span>
+                      <span style="display:block;font-size:13px;color:#1f6f74;line-height:1.35">{{ a.forName }}</span>
+                    </div>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:12px">
+              <sc-for list="{{ pShots }}" as="sh" hint-placeholder-count="2">
+                <sc-if value="{{ sh.has }}" hint-placeholder-val="{{ false }}"><div role="img" aria-label="{{ sh.label }}" style="width:100%;aspect-ratio:16/9;background-image:{{ sh.bg }};background-size:cover;background-position:center;border-radius:8px;border:1px solid #b9d9d6"></div></sc-if>
+                <sc-if value="{{ sh.none }}" hint-placeholder-val="{{ true }}"><div style="aspect-ratio:16/9;border:1px dashed #3a9ea4;border-radius:8px;background:rgba(207,233,230,0.45);display:flex;align-items:center;justify-content:center;font-size:13px;color:#1f5f63">{{ sh.label }}</div></sc-if>
+              </sc-for>
+            </div>
+          </div>
+        </sc-if>
+        <sc-if value="{{ isDesk }}" hint-placeholder-val="{{ false }}">
+          <p style="margin:0;font-size:15px;line-height:1.55;color:#3d5254;max-width:56ch;text-wrap:pretty">{{ pBody }}</p>
+          <sc-if value="{{ hasUrl }}" hint-placeholder-val="{{ false }}">
+            <a href="{{ pUrl }}" target="_blank" rel="noopener" style="align-self:flex-start;padding:8px 14px;border-radius:8px;border:1px solid #2f8a90;color:#1f5f63;text-decoration:none;font-size:13px;cursor:none" style-hover="background:#d3ebe8">Didn't open? Go to {{ pTitle }}</a>
+          </sc-if>
+        </sc-if>
+      </div>
+    </div>
+  </sc-if>
+  <div ref="{{ handRef }}" style="position:absolute;left:0;top:0;width:56px;height:56px;pointer-events:none;transform:translate(-200px,-200px);z-index:30;color:{{ handCol }};filter:{{ handGlow }}">
+    <sc-if value="{{ open }}" hint-placeholder-val="{{ true }}">
+      <svg viewBox="0 0 64 64" width="56" height="56" style="display:block;overflow:visible">
+        <polygon points="20,34 44,34 34,60 22,54" fill="currentColor" fill-opacity="0.26"></polygon>
+        <polygon points="44,34 46,50 34,60" fill="currentColor" fill-opacity="0.34"></polygon>
+        <polygon points="24,34 28,10 32,10 30,34" fill="currentColor" fill-opacity="0.3"></polygon>
+        <polygon points="31,34 34,6 38,7 36,34" fill="currentColor" fill-opacity="0.24"></polygon>
+        <polygon points="37,34 41,9 45,10 41,35" fill="currentColor" fill-opacity="0.3"></polygon>
+        <polygon points="42,36 48,16 51,18 45,38" fill="currentColor" fill-opacity="0.24"></polygon>
+        <polygon points="20,36 10,26 7,29 18,46" fill="currentColor" fill-opacity="0.3"></polygon>
+      </svg>
+    </sc-if>
+    <sc-if value="{{ grabbing }}" hint-placeholder-val="{{ false }}">
+      <svg viewBox="0 0 64 64" width="56" height="56" style="display:block;overflow:visible">
+        <polygon points="20,30 44,30 34,58 22,52" fill="currentColor" fill-opacity="0.32"></polygon>
+        <polygon points="44,30 46,46 34,58" fill="currentColor" fill-opacity="0.4"></polygon>
+        <polygon points="23,30 26,20 31,20 30,31" fill="currentColor" fill-opacity="0.36"></polygon>
+        <polygon points="31,30 33,19 38,19 37,31" fill="currentColor" fill-opacity="0.3"></polygon>
+        <polygon points="38,31 41,21 45,22 43,33" fill="currentColor" fill-opacity="0.36"></polygon>
+        <polygon points="20,34 14,30 16,40 22,44" fill="currentColor" fill-opacity="0.34"></polygon>
+      </svg>
+    </sc-if>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { showHint: true, showEnd: false, grabbing: false };
+  canvasRef = React.createRef();
+  rootRef = React.createRef();
+  handRef = React.createRef();
+  glitchRef = React.createRef();
+  glitch() {
+    const cv = this.glitchRef.current; if (!cv) return; cv.style.pointerEvents = 'none'; const c = cv.getContext('2d'); const t0 = performance.now();
+    const step = () => {
+      const w = cv.width = cv.clientWidth, hh = cv.height = cv.clientHeight, e = (performance.now() - t0) / 900; c.clearRect(0, 0, w, hh);
+      if (e >= 1) return;
+      const k = e < 0.5 ? e * 2 : (1 - e) * 2;
+      c.fillStyle = 'rgba(145,132,217,' + (0.35 * k) + ')'; c.fillRect(0, 0, w, hh);
+      for (let i = 0; i < 18; i++) { const y = Math.random() * hh, bh = 2 + Math.random() * 26; c.fillStyle = ['rgba(93,82,148,', 'rgba(185,177,236,', 'rgba(22,24,38,', 'rgba(231,229,254,'][i % 4] + (0.3 + Math.random() * 0.5) * k + ')'; c.fillRect((Math.random() - 0.5) * 80 * k, y, w, bh); }
+      requestAnimationFrame(step);
+    };
+    step();
+  }
+  projects = {
+    builders: { shots: ['assets/shots/builders-1.png', 'assets/shots/builders-2.png'], kicker: 'Trophy 01 · 4 awards', title: 'Taco Builder and SONIC Burger Builder', sub: 'Inspire Brands · Rusty Taco and SONIC. One design and mechanic, built for two brands.', awards: [
+      { img: 'assets/awards/01_best-of-show-2021.png', name: 'Best of Show (Vendor)', year: '2021', org: 'DevLearn DemoFest', forName: 'Rusty Taco – Taco Builder Simulation' },
+      { img: 'assets/awards/06_hermes-honorable-mention-2023.png', name: 'Honorable Mention', year: '2023', org: 'Hermes Creative Awards · Web / Interactive Media', forName: 'Rusty Taco – Taco Builder Simulation' },
+      { img: 'assets/awards/02_davey-silver-2022.png', name: 'Silver Winner', year: '2022', org: 'Davey Awards · Virtual & Remote Experiences, Education', forName: 'SONIC – Burger Builder Simulation' },
+      { img: 'assets/awards/03_horizon-silver-2022-sonic.png', name: 'Silver Winner', year: '2022', org: 'Horizon Interactive Awards · Training / E-Learning', forName: 'SONIC – Burger Builder Simulation' } ] },
+    hazards: { shots: ['assets/shots/hazards-1.png', 'assets/shots/hazards-2.png'], kicker: 'Trophy 02 · 2 awards', title: 'High Energy Hazards & Direct Control Awareness', sub: 'The Hazard Wheel', awards: [
+      { img: 'assets/awards/04_horizon-silver-2022-high-energy.png', name: 'Silver Winner', year: '2022', org: 'Horizon Interactive Awards · Training / E-Learning', forName: 'High Energy Hazards & Direct Control Awareness' },
+      { img: 'assets/awards/05_hermes-gold-2023.png', name: 'Gold Winner', year: '2023', org: 'Hermes Creative Awards · Web / Interactive Media', forName: 'High Energy Hazards & Direct Control Awareness' } ] },
+    genai: { shots: ['assets/shots/genai-1.png', 'assets/shots/genai-2.png'], kicker: 'Trophy 03 · 2 awards', title: 'GenAI-Powered Storytelling, Gamification, and Soft Skills Support', sub: 'CenterPoint Energy', awards: [
+      { img: 'assets/awards/07_demo-fest-best-blended-2025.png', name: 'Best Blended Learning Project', year: '2025', org: 'DevLearn DemoFest', forName: 'GenAI-Powered Storytelling' },
+      { img: 'assets/awards/08_horizon-gold-2025.png', name: 'Gold Winner', year: '2025', org: 'Horizon Interactive Awards', forName: 'GenAI-Powered Storytelling' } ] },
+    newsletter: { title: 'Publications', sub: 'Opened in a new tab', url: 'https://www.edtechtris.com/blog/categories/publications', body: 'Published articles and features.' },
+    lanyard: { title: 'Speaking', sub: 'Opened in a new tab', url: 'https://www.edtechtris.com/blog/categories/speaking', body: 'Talks, panels and conference sessions.' },
+    laptop: { title: 'Blog', sub: 'Opened in a new tab', url: 'https://www.edtechtris.com/blog/categories/insights', body: 'Insights on learning, leadership and emerging tech.' },
+    xrinlxd: { title: 'XR in LXD', sub: 'Co-founder and primary host · 4 years', url: 'https://www.youtube.com/@xrinlxd/videos', body: 'Past sessions are on YouTube.' },
+    dbh: { title: 'DESIGNxHUMANITY', sub: 'Project leader and mentor', url: null, body: '' },
+    cutout: { title: 'LinkedIn', sub: 'Opened in a new tab', url: 'https://www.linkedin.com/in/tristiav/', body: 'Connect with Tristia on LinkedIn.' }
+  };
+  hoverNames = { builders: 'Taco Builder + Burger Builder', hazards: 'The Hazard Wheel', genai: 'GenAI Storytelling', newsletter: 'Publications', lanyard: 'Speaking', laptop: 'Blog', cutout: 'Connect on LinkedIn', woodpile: 'The woodpile', xrinlxd: 'XR in LXD', dbh: 'DESIGNxHUMANITY', bell: 'The bell' };
+  stories = [
+    { title: 'Winning over the SMEs', col: '#3fd0c6', ch: [
+      ['Challenge', 'The utility paid for a digital redesign of its controller apprenticeship, but its senior SMEs doubted simulation would improve on the hands-on training they trusted.'],
+      ['Action', 'I led the design and used prototypes to make the case, building simulations of switching and restoration to work alongside their ILT and on-the-job training, not replace it.'],
+      ['Result', 'It took several rounds of prototypes before the SMEs saw the value. The pilot cohort reached competency about 25% faster than prior cohorts, across the full blended program.'] ] },
+    { title: 'Training on unfinished software', col: '#ffb43a', ch: [
+      ['Challenge', 'A hospitality group was replacing every sales, scheduling, timekeeping and inventory system for 60K employees while the vendor was still customizing the application.'],
+      ['Action', 'I led the design and pushed to keep hands-on simulation in it rather than static steps. We built role-based practice for four levels and logged application bugs as we found them.'],
+      ['Result', 'The 9-module curriculum cut onboarding time 40% and reduced application errors 45%. Nobody had to learn on live data.'] ] },
+    { title: 'Completion wasn’t the problem', col: '#ff6fa0', ch: [
+      ['Challenge', 'Safety incident reporting had to meet regulatory requirements. Completion rates were high, so the training looked fine, but the quality of the reports wasn’t.'],
+      ['Action', 'I led the design and rebuilt it around real incident scenarios where employees had to decide whether and how to report. I added manager-led discussion to safety meetings they already held.'],
+      ['Result', 'Fewer reports had to be reclassified, and reporting got faster. The work reached over 9K field workers and won Horizon Silver and Hermes Gold.'] ] },
+    { title: 'GenAI’s hidden hours', col: '#9a8cff', ch: [
+      ['Challenge', 'I built a GenAI pipeline for a sci-fi comic training experience expecting big time savings. It cut asset time, but work shifted from vendor fees to our hours.'],
+      ['Action', 'I decided where AI could draft and where human expertise was non-negotiable, adjusted the workflow as we went, and wrote down what actually happened.'],
+      ['Result', 'Horizon Gold and DevLearn DemoFest Best Blended Learning, both 2025. I published what actually happened in TD Magazine instead of a success story.'] ] }
+  ];
+  openPanel(id) { if (this.app) this.app.lock(true); this.setState({ panel: id, pIn: false, grabbing: false }); setTimeout(() => this.setState({ pIn: true }), 40); }
+  closePanel() { if (!this.state.panel) return; this.setState({ panel: null, pIn: false }); setTimeout(() => { if (this.app) this.app.lock(false); }, 0); if (this.focusIn) this.focusIn(); }
+  touch = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+  componentDidMount() {
+    if (this.glitchRef.current) Object.assign(this.glitchRef.current.style, { pointerEvents: 'none', left: '0px', top: '0px' });
+    this.onMove = (e) => { const h = this.handRef.current; if (h && e.pointerType !== 'touch') h.style.transform = `translate(${e.clientX - 24}px, ${e.clientY - 9}px)`; };
+    this.focusIn = () => { try { window.focus(); const r = document.querySelector('[data-hall-root]'); if (r) r.focus({ preventScroll: true }); } catch (err) {} };
+    this.onDown = (e) => { this.focusIn(); if (e.pointerType !== 'touch') this.setState({ grabbing: true }); };
+    this.onFocus = () => this.setState({ needFocus: false });
+    this.onBlur = () => { if (!this.touch) this.setState({ needFocus: true }); };
+    this.onKey = (e) => { if (e.key === 'Escape' && this.state.panel) { e.stopImmediatePropagation(); this.closePanel(); } };
+    window.addEventListener('keydown', this.onKey, true);
+    window.addEventListener('focus', this.onFocus);
+    window.addEventListener('blur', this.onBlur);
+    this.focusIn();
+    setTimeout(() => { if (!document.hasFocus() && !this.touch) this.setState({ needFocus: true }); }, 400);
+    this.onUp = () => { if (this.state.grabbing) this.setState({ grabbing: false }); };
+    window.addEventListener('pointermove', this.onMove);
+    window.addEventListener('pointerdown', this.onDown);
+    window.addEventListener('pointerup', this.onUp);
+    const boot = (tries) => {
+      if (this.dead || this.app) return;
+      const m = window.Realm;
+      const cv = this.canvasRef.current || document.querySelector('canvas[data-hall]');
+      if (!m || !cv) { if (tries < 1200) requestAnimationFrame(() => boot(tries + 1)); else console.warn('Hallway prototype did not start', { module: !!m, canvas: !!cv }); return; }
+      try {
+        this.app = window.__hall = m.start(cv, {
+        onConjure: () => { this.glitch(); setTimeout(() => { try { window.open('https://conjurexr.com', '_blank', 'noopener'); } catch (e) {} this.setState({ conjure: true, grabbing: false }); }, 700); },
+        onFirstMove: () => setTimeout(() => this.setState({ showHint: false }), 2500),
+        onArea: (a) => this.setState(a === 'campfire' ? { area: a } : { area: a, story: null, fireHint: false }),
+        onRoom: (r) => { this.setState({ flash: 1, door: null, flashBg: r === 'campfire' ? '#2a2e4c' : '#E8E8EA', story: null, fireHint: false }); setTimeout(() => this.setState({ flash: 0 }), r === 'campfire' ? 200 : 60); },
+        onFireHint: (v) => this.setState({ fireHint: v }),
+        onStory: (i) => this.setState({ story: i, fireHint: false }),
+        onStoryEnd: () => this.setState({ story: null }),
+        onHover: (id) => this.setState({ hover: id }),
+        onTrophy: (id) => { const p = this.projects[id]; if (p && p.url) { try { window.open(p.url, '_blank', 'noopener'); } catch (e) {} } setTimeout(() => this.openPanel(id), 300); },
+        onDoor: (k) => { this.setState({ door: k }); clearTimeout(this.doorT); this.doorT = setTimeout(() => this.setState({ door: null }), 3500); },
+        onLoop: () => { this.setState({ showLoop: true, flash: 1 }); setTimeout(() => this.setState({ flash: 0 }), 60); clearTimeout(this.loopT); this.loopT = setTimeout(() => this.setState({ showLoop: false }), 4000); }
+        });
+      } catch (err) { console.error('Hallway prototype failed to start', err); }
+    };
+    boot(0);
+  }
+  componentWillUnmount() {
+    this.dead = true;
+    window.removeEventListener('pointermove', this.onMove);
+    window.removeEventListener('pointerdown', this.onDown);
+    window.removeEventListener('pointerup', this.onUp);
+    window.removeEventListener('focus', this.onFocus);
+    window.removeEventListener('keydown', this.onKey, true);
+    clearInterval(this.storyTick);
+    window.removeEventListener('blur', this.onBlur);
+    if (this.app) this.app.dispose();
+  }
+  renderVals() {
+    return {
+      canvasRef: this.canvasRef,
+      handRef: this.handRef,
+      glitchRef: this.glitchRef,
+      conjure: !!this.state.conjure,
+      areaName: ({ hallway: 'Origin Story', trophy: 'Happy Endings', campfire: 'Plot Twists' })[this.state.area] || 'The Entry',
+      hudA: this.state.area === 'campfire' ? '#f4ecd8' : '#1d2a2b',
+      hudB: this.state.area === 'campfire' ? '#c9c4d8' : '#595d6c',
+      hudC: this.state.area === 'campfire' ? '#e9c98a' : '#1f5f63',
+      flashBg: this.state.flashBg || '#E8E8EA',
+      fireHintOn: !!this.state.fireHint && this.state.story == null && !this.state.panel && !this.state.hover,
+      fireHintMain: this.touch ? 'Tap the woodpile to add a log' : 'Press Space to add a log',
+      storyOn: this.state.story != null,
+      storyCol: this.state.story != null ? this.stories[this.state.story].col : '#3fd0c6',
+      storyKicker: this.state.story != null ? 'Story ' + (this.state.story + 1) + ' of 4' : '',
+      storyCh: this.state.story != null ? this.stories[this.state.story].ch.map(([k, t]) => ({ k, t })) : [],
+      storyNext: this.touch ? 'Tap the woodpile for the next story' : 'Press Space for the next story',
+      closeStory: () => { if (this.app) this.app.endStory(); this.setState({ story: null }); this.focusIn(); },
+      storyTitle: this.state.story != null ? this.stories[this.state.story].title : '',
+      hoverMsg: !!this.state.hover && !this.state.panel && this.state.story == null && this.state.area !== 'trophy',
+      hoverTitle: this.hoverNames[this.state.hover] || '',
+      grabHint: this.state.hover === 'woodpile' ? (this.touch ? 'Tap to add a log' : 'Click or press Space to add a log') : this.state.hover === 'bell' ? (this.touch ? 'Tap to ring and return to the Entry' : 'Click or press Enter to ring and return to the Entry') : (this.state.hover === 'xrinlxd' || this.state.hover === 'dbh') ? (this.touch ? 'Tap to read' : 'Click or press Enter to read') : this.touch ? 'Tap to pick it up' : 'Click or press Enter to pick it up',
+      panel: !!this.state.panel,
+      isProject: !!(this.state.panel && this.projects[this.state.panel].awards),
+      isDesk: !!(this.state.panel && !this.projects[this.state.panel].awards),
+      pUrl: (this.projects[this.state.panel] || {}).url || '',
+      hasUrl: !!(this.projects[this.state.panel] || {}).url,
+      pTitle: (this.projects[this.state.panel] || {}).title || '',
+      pSub: (this.projects[this.state.panel] || {}).sub || '',
+      pBody: (this.projects[this.state.panel] || {}).body || '',
+      pAwards: ((this.projects[this.state.panel] || {}).awards || []).map((a) => ({ ...a, bg: 'url(' + a.img + ')' })),
+      pShots: ((this.projects[this.state.panel] || {}).shots || ['', '']).map((src, i) => ({ src, bg: src ? 'url(' + src + ')' : 'none', has: !!src, none: !src, label: 'Screenshot ' + (i + 1) })),
+      pO: this.state.pIn ? 1 : 0,
+      pT: this.state.pIn ? 'translate(-50%,-50%) scale(1)' : 'translate(-50%,-47%) scale(0.97)',
+      pClip: this.state.pIn ? 'inset(0% 0% 0% 0% round 8px)' : 'inset(49% 0% 49% 0% round 8px)',
+      closePanel: () => this.closePanel(),
+      flashO: this.state.flash ? 1 : 0,
+      flashTr: this.state.flash ? 'none' : 'opacity 0.9s ease-out',
+      doorMsg: !!this.state.door && !this.state.hover && !this.state.fireHint && this.state.story == null,
+      doorTitle: this.state.door === 'trophy' ? 'Happy Endings' : 'Plot Twists',
+      closeConjure: () => { this.setState({ conjure: false }); if (this.app) this.app.stepBack(); this.focusIn(); },
+      needFocus: !!this.state.needFocus,
+      showHint: this.state.showHint && !this.state.hover && !this.state.fireHint && this.state.story == null && !this.state.door && !this.state.showLoop,
+      showLoop: !!this.state.showLoop && !this.state.hover,
+      grabbing: this.state.grabbing,
+      open: !this.state.grabbing,
+      handCol: this.state.area === 'campfire' ? '#f6f3ff' : '#1f2130',
+      handGlow: this.state.area === 'campfire' ? 'drop-shadow(0 0 1px rgba(255,255,255,0.85)) drop-shadow(0 0 8px rgba(246,243,255,0.4))' : 'none',
+      hintMain: this.touch ? 'Hold to walk' : 'Arrow keys to move',
+      hintSub: this.touch ? 'Drag to turn' : 'Move the mouse to look around',
+      reset: () => { if (this.app) this.app.reset(); this.focusIn(); }
+    };
+  }
+}
+</script>
+</body>
+</html>
