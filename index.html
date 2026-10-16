@@ -12,6 +12,7 @@
 <script src="ds/bundle.js"></script>
 <title>The Realm · Tristia Hennessey</title>
 <script type="module" src="realm.js?v=30"></script>
+<script src="realm-audio.js?v=3"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Patrick+Hand&amp;family=Klee+One&amp;display=swap">
 <style>html,body{margin:0;height:100%;overflow:hidden;background:#E8E8EA}a{color:#1f6f74}a:hover{color:#14514f}</style>
@@ -24,7 +25,10 @@
     <span style="font-size:13px;color:{{ hudB }};white-space:nowrap">{{ areaName }}</span>
   </div>
 
-  <a href="https://edtechtris.com" target="_top" style="position:absolute;right:20px;top:16px;display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:8px;border:1px solid #2f8a90;background:rgba(238,242,241,0.7);color:#1f5f63;font:500 13px var(--font-body);cursor:none;white-space:nowrap;text-decoration:none" style-hover="background:#d3ebe8">Back to edtechtris.com</a>
+  <div style="position:absolute;right:20px;top:16px;display:flex;align-items:center;gap:8px">
+    <button onClick="{{ toggleSound }}" aria-pressed="{{ soundPressed }}" style="display:flex;align-items:center;padding:8px 14px;border-radius:8px;border:1px solid #2f8a90;background:rgba(238,242,241,0.7);color:#1f5f63;font:500 13px var(--font-body);cursor:none;white-space:nowrap" style-hover="background:#d3ebe8">{{ soundLabel }}</button>
+    <a href="https://edtechtris.com" target="_top" style="display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:8px;border:1px solid #2f8a90;background:rgba(238,242,241,0.7);color:#1f5f63;font:500 13px var(--font-body);cursor:none;white-space:nowrap;text-decoration:none" style-hover="background:#d3ebe8">Back to edtechtris.com</a>
+  </div>
 
   <sc-if value="{{ needFocus }}" hint-placeholder-val="{{ false }}">
     <div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);padding:12px 20px;border-radius:8px;border:1px solid #2f8a90;background:rgba(238,242,241,0.88);color:#1f5f63;font:500 16px var(--font-body);pointer-events:none;white-space:nowrap">Click anywhere, then use the arrow keys</div>
@@ -143,6 +147,7 @@
     </div>
   </sc-if>
   <div ref="{{ handRef }}" style="position:absolute;left:0;top:0;width:56px;height:56px;pointer-events:none;transform:translate(-200px,-200px);z-index:30;color:{{ handCol }};filter:{{ handGlow }}">
+    <svg width="0" height="0" style="position:absolute"><filter id="handBoost"><feComponentTransfer><feFuncA type="linear" slope="2.8"></feFuncA></feComponentTransfer></filter></svg>
     <sc-if value="{{ open }}" hint-placeholder-val="{{ true }}">
       <svg viewBox="0 0 64 64" width="56" height="56" style="display:block;overflow:visible">
         <polygon points="20,34 44,34 34,60 22,54" fill="currentColor" fill-opacity="0.26"></polygon>
@@ -253,7 +258,7 @@ class Component extends DCLogic {
         this.app = window.__hall = m.start(cv, {
         onConjure: () => { this.glitch(); setTimeout(() => { try { window.open('https://conjurexr.com', '_blank', 'noopener'); } catch (e) {} this.setState({ conjure: true, grabbing: false }); }, 700); },
         onFirstMove: () => setTimeout(() => this.setState({ showHint: false }), 2500),
-        onArea: (a) => this.setState(a === 'campfire' ? { area: a } : { area: a, story: null, fireHint: false }),
+        onArea: (a) => { if (window.RealmAudio) window.RealmAudio.setArea(a); this.setState(a === 'campfire' ? { area: a } : { area: a, story: null, fireHint: false }); },
         onRoom: (r) => { this.setState({ flash: 1, door: null, flashBg: r === 'campfire' ? '#2a2e4c' : '#E8E8EA', story: null, fireHint: false }); setTimeout(() => this.setState({ flash: 0 }), r === 'campfire' ? 200 : 60); },
         onFireHint: (v) => this.setState({ fireHint: v }),
         onStory: (i) => this.setState({ story: i, fireHint: false }),
@@ -266,9 +271,12 @@ class Component extends DCLogic {
       } catch (err) { console.error('Hallway prototype failed to start', err); }
     };
     boot(0);
+    const hookAudio = (n) => { if (this.dead) return; const RA = window.RealmAudio; if (!RA) { if (n < 600) setTimeout(() => hookAudio(n + 1), 50); return; } this.setState({ muted: RA.isMuted() }); this.offMute = RA.onMute((m) => this.setState({ muted: m })); };
+    hookAudio(0);
   }
   componentWillUnmount() {
     this.dead = true;
+    if (this.offMute) this.offMute();
     window.removeEventListener('pointermove', this.onMove);
     window.removeEventListener('pointerdown', this.onDown);
     window.removeEventListener('pointerup', this.onUp);
@@ -281,6 +289,9 @@ class Component extends DCLogic {
   renderVals() {
     return {
       canvasRef: this.canvasRef,
+      soundLabel: (window.RealmAudio ? window.RealmAudio.isMuted() : this.state.muted) ? 'Sound off' : 'Sound on',
+      soundPressed: (window.RealmAudio ? window.RealmAudio.isMuted() : this.state.muted) ? 'false' : 'true',
+      toggleSound: (e) => { if (window.RealmAudio) this.setState({ muted: window.RealmAudio.toggleMute() }); if (e && e.currentTarget) e.currentTarget.blur(); this.focusIn(); },
       handRef: this.handRef,
       glitchRef: this.glitchRef,
       conjure: !!this.state.conjure,
@@ -326,7 +337,7 @@ class Component extends DCLogic {
       grabbing: this.state.grabbing,
       open: !this.state.grabbing,
       handCol: this.state.area === 'campfire' ? '#f6f3ff' : '#1f2130',
-      handGlow: this.state.area === 'campfire' ? 'drop-shadow(0 0 1px rgba(255,255,255,0.85)) drop-shadow(0 0 8px rgba(246,243,255,0.4))' : 'none',
+      handGlow: this.state.area === 'campfire' ? 'url(#handBoost) drop-shadow(0 0 1px rgba(20,18,40,0.9)) drop-shadow(0 0 10px rgba(246,243,255,0.45))' : 'url(#handBoost)',
       hintMain: this.touch ? 'Hold to walk' : 'Arrow keys to move',
       hintSub: this.touch ? 'Drag to turn' : 'Move the mouse to look around',
       reset: () => { if (this.app) this.app.reset(); this.focusIn(); }
